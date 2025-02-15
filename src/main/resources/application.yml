@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: auth
+  r2dbc:
+    url: r2dbc:postgresql://158.247.250.91:5432/firststory
+    username: postgres
+    password: fst@3012
+    pool:
+      initial-size: 10
+      max-size: 10
+  redis:
+    host: 158.247.250.91
+    port: 6379
