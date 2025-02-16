@@ -8,6 +8,6 @@ import reactor.core.publisher.Mono
 @Repository
 interface MemberRepository: ReactiveCrudRepository<Member, Long> {
 
-    fun findByUserName(userName: String) : Mono<Member>
+    fun findByUsername(username: String) : Mono<Member>
 
 }

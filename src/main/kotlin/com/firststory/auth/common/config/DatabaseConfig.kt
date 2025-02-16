@@ -1,7 +1,7 @@
 package com.firststory.auth.common.config
 
-import io.r2dbc.postgresql.PostgresqlConnectionConfiguration
 import io.r2dbc.postgresql.PostgresqlConnectionFactory
+import io.r2dbc.postgresql.PostgresqlConnectionConfiguration
 import io.r2dbc.spi.ConnectionFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
@@ -21,13 +21,25 @@ class DatabaseConfig {
     fun connectionFactory(): ConnectionFactory {
         return PostgresqlConnectionFactory(
             PostgresqlConnectionConfiguration.builder()
-                .fromUrl
+                .host(extractHost(url))
+                .port(extractPort(url))
+                .database(extractDatabase(url))
+                .username(username)
+                .password(password)
+                .build()
         )
     }
 
-    @Bean
-    fun databaseClient(connectionFactory: ConnectionFactory): DatabaseClient {
-        return DatabaseClient.create(connectionFactory)
+    private fun extractHost(ur: String): String {
+        return url.substringAfter("://").substringBefore(":")
+    }
+
+    private fun extractPort(url: String): Int {
+        return url.substringAfter(":").substringBefore("/").toInt()
+    }
+
+    private fun extractDatabase(url: String): String {
+        return url.substringAfterLast("/")
     }
 
 }

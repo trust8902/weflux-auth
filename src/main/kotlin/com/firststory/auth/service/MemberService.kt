@@ -11,11 +11,15 @@ class MemberService(
     private val tokenService: TokenService
 ) {
 
-    fun registerMember(userName: String, password: String, name: String): Mono<Member> {
+    fun getMember(username: String): Mono<Member> {
+        return memberRepository.findByUsername(username)
+    }
+
+    fun registerMember(username: String, password: String, name: String): Mono<Member> {
         val authToken = tokenService.generateAuthToken()
 
         val member = Member(
-            userName = userName,
+            username = username,
             password = password,
             name = name,
             authToken = authToken
@@ -24,12 +28,12 @@ class MemberService(
         return memberRepository.save(member)
     }
 
-    fun authenticate(userName: String, password: String): Mono<String> {
-        return memberRepository.findByUserName(userName)
+    fun authenticate(username: String, password: String): Mono<String> {
+        return memberRepository.findByUsername(username)
             .filter { it.password == password }
             .flatMap {
-                val accessToken = tokenService.generateAccessToken(userName)
-                tokenService.saveAccessToken(userName, accessToken)
+                val accessToken = tokenService.generateAccessToken(username)
+                tokenService.saveAccessToken(username, accessToken)
                     .thenReturn(accessToken)
             }
     }

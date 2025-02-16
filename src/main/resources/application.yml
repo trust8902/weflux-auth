@@ -11,3 +11,10 @@ spring:
   redis:
     host: 158.247.250.91
     port: 6379
+  flyway:
+    enabled: true
+    url: r2dbc:postgresql://158.247.250.91:5432/firststory
+    user: postgres
+    password: fst@3012
+    locations: classpath:db/migration
+    schemas: public
