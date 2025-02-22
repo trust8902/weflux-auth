@@ -1,4 +1,6 @@
 spring:
+  main:
+    web-application-type: reactive
   application:
     name: auth
   r2dbc:
@@ -11,10 +13,16 @@ spring:
   redis:
     host: 158.247.250.91
     port: 6379
-  flyway:
-    enabled: true
-    url: r2dbc:postgresql://158.247.250.91:5432/firststory
+    lettuce:
+      shutdown-timeout: 200ms
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+    url: jdbc:postgresql://158.247.250.91:5432/firststory
     user: postgres
     password: fst@3012
-    locations: classpath:db/migration
-    schemas: public
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration

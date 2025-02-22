@@ -52,6 +52,7 @@ class GlobalExceptionHandler {
         return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
             ApiResponse(
                 statusCode = HttpStatus.BAD_REQUEST.value(),
+                message = "Validation failed",
                 data = errorDetails,
             )
         ))
@@ -75,6 +76,7 @@ class GlobalExceptionHandler {
         return Mono.just(ResponseEntity.status(httpStatus).body(
             ApiResponse(
                 statusCode = httpStatus.value(),
+                message = e.message ?: "Unexpected error occurred",
                 data = errorDetails,
             )
         ))

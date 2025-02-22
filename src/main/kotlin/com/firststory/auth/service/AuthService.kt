@@ -1,52 +1,54 @@
 package com.firststory.auth.service
 
 import com.firststory.auth.domain.Member
-import com.firststory.auth.repository.MemberRepository
-import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.security.authentication.ReactiveAuthenticationManager
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
 
 @Service
 class AuthService(
-    private val memberRepository: MemberRepository,
+    private val memberService: MemberService,
     private val tokenService: TokenService,
-    private val passwordEncoder: PasswordEncoder
+    private val authenticationManager: ReactiveAuthenticationManager,
 ) {
-    fun register(username: String, password: String, name: String): Mono<Member> {
-        val authToken = tokenService.generateAuthToken()
-        val encodedPassword = passwordEncoder.encode(password)
-        return memberRepository.save(Member(
-            username = username,
-            password = encodedPassword,
-            name = name,
-            authToken = authToken
-        ))
+    fun signUp(username: String, password: String, name: String): Mono<Member> {
+        return memberService.signUp(
+            username,
+            password,
+            name,
+            tokenService.createAuthToken(username)
+        )
     }
 
     fun authenticate(username: String, password: String): Mono<Pair<String, String>> {
-        return memberRepository.findByUsername(username)
-            .filter { passwordEncoder.matches(password, it.password) }
-            .flatMap {
-                val accessToken = tokenService.generateAccessToken(username)
-                val refreshToken = tokenService.generateRefreshToken(username)
+        val authToken = UsernamePasswordAuthenticationToken(username, password);
+        return authenticationManager.authenticate(authToken).flatMap { auth ->
+            val user = auth.principal as UserDetails
+            memberService.findByUsernameDefault(username)
+                .flatMap { member ->
+                    val accessToken = tokenService.createAccessToken(member.username)
+                    val refreshToken = tokenService.createRefreshToken(member.username)
 
-                Mono.zip(
-                    tokenService.saveAccessToken(username, accessToken),
-                    tokenService.saveRefreshToken(username, refreshToken)
-                ).thenReturn(Pair(accessToken, refreshToken))
-            }
+                    Mono.zip(
+                        tokenService.saveAccessToken(member.id!!, accessToken),
+                        tokenService.saveRefreshToken(member.id, refreshToken)
+                    ).thenReturn(Pair(accessToken, refreshToken))
+                }
+        }
     }
 
-    fun refreshToken(refreshToken: String): Mono<Pair<String, String>> {
-        return Mono.fromCallable { tokenService.verifyRefreshToken(refreshToken) }
-            .flatMap { username ->
-                val newAccessToken = tokenService.generateAccessToken(username)
-                val newRefreshToken = tokenService.generateRefreshToken(username)
-
-                Mono.zip(
-                    tokenService.saveAccessToken(username, newAccessToken),
-                    tokenService.saveRefreshToken(username, newRefreshToken)
-                ).thenReturn(Pair(newAccessToken, newRefreshToken))
-            }
-    }
+//    fun refreshToken(refreshToken: String): Mono<Pair<String, String>> {
+//        return Mono.fromCallable { tokenService.verifyRefreshToken(refreshToken) }
+//            .flatMap { username ->
+//                val newAccessToken = tokenService.createAccessToken(username)
+//                val newRefreshToken = tokenService.createRefreshToken(username)
+//
+//                Mono.zip(
+//                    tokenService.saveAccessToken(username, newAccessToken),
+//                    tokenService.saveRefreshToken(username, newRefreshToken)
+//                ).thenReturn(Pair(newAccessToken, newRefreshToken))
+//            }
+//    }
 }

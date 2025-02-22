@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-member-table
+      author: user
+      changes:
+        - createTable:
+            tableName: member
+            remarks: 사용자
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: username
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: password
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: auth_token
+                  type: varchar(512)
+                  constraints:
+                    nullable: false

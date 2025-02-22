@@ -1,9 +1,10 @@
 package com.firststory.auth.controller
 
-import com.firststory.auth.domain.Member
+import com.firststory.auth.common.response.ApiResponse
 import com.firststory.auth.dto.*
 import com.firststory.auth.service.AuthService
 import jakarta.validation.Valid
+import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -11,15 +12,16 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
-@RestController
-@RequestMapping("/auth")
 @Validated
+@RestController
+@RequestMapping("/oauth2")
 class AuthController(
     private val authService: AuthService
 ) {
-    @PostMapping("/register")
-    fun register(@RequestBody @Valid dto: RegisterDtoRequest): Mono<Member> {
-        return authService.register(dto.username, dto.password, dto.name)
+    @PostMapping("/signUp")
+    fun signUp(@RequestBody @Valid dto: RegisterDtoRequest): Mono<ResponseEntity<ApiResponse<String>>> {
+        return authService.signUp(dto.username, dto.password, dto.name)
+            .map { ResponseEntity.ok(ApiResponse(200, "User created", null)) }
     }
 
     @PostMapping("/login")
@@ -30,11 +32,11 @@ class AuthController(
             }
     }
 
-    @PostMapping("/refresh")
-    fun refreshToken(@RequestBody @Valid dto: RefreshTokenDtoRequest): Mono<RefreshTokenDtoResponse> {
-        return authService.refreshToken(dto.refreshToken)
-            .map { (accessToken, refreshToken) ->
-                RefreshTokenDtoResponse(accessToken, refreshToken)
-            }
-    }
+//    @PostMapping("/refresh")
+//    fun refreshToken(@RequestBody @Valid dto: RefreshTokenDtoRequest): Mono<RefreshTokenDtoResponse> {
+//        return authService.refreshToken(dto.refreshToken)
+//            .map { (accessToken, refreshToken) ->
+//                RefreshTokenDtoResponse(accessToken, refreshToken)
+//            }
+//    }
 }
