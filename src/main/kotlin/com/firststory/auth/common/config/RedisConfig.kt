@@ -36,34 +36,20 @@ class RedisConfig {
 
         val keySerializer = StringRedisSerializer()
 
-        // ObjectMapper를 직접 설정
+        // ObjectMapper 설정
         val objectMapper = Jackson2ObjectMapperBuilder.json()
             .modulesToInstall(JavaTimeModule())  // Java 8 Date/Time 처리
             .build<ObjectMapper>()
 
-        // Jackson2JsonRedisSerializer에 ObjectMapper를 설정하는 대신 직접 직렬화/역직렬화 처리
-        val valueSerializer = Jackson2JsonRedisSerializer(RegisteredClient::class.java)
+        // Jackson2JsonRedisSerializer에 ObjectMapper 설정
+        val valueSerializer = Jackson2JsonRedisSerializer(objectMapper, RegisteredClient::class.java)
+
+        // SerializationContext 설정
         val valueSerializationContext = RedisSerializationContext
             .newSerializationContext<String, RegisteredClient>(keySerializer)
             .value(valueSerializer)
             .build()
 
         return ReactiveRedisTemplate(connectionFactory, valueSerializationContext)
-    }
-
-    @Bean
-    fun redisTemplate(redisConnectionFactory: ReactiveRedisConnectionFactory): ReactiveRedisTemplate<String, Any> {
-        val objectMapper = Jackson2ObjectMapperBuilder.json()
-            .modulesToInstall(JavaTimeModule())  // Java 8 Date/Time 처리
-            .build<ObjectMapper>()
-
-        // Jackson2JsonRedisSerializer에 ObjectMapper 설정
-        val serializer = Jackson2JsonRedisSerializer(Any::class.java)
-        val valueSerializationContext = RedisSerializationContext
-            .newSerializationContext<String, Any>(StringRedisSerializer())
-            .value(serializer)
-            .build()
-
-        return ReactiveRedisTemplate(redisConnectionFactory, valueSerializationContext)
     }
 }
