@@ -1,5 +1,6 @@
 package com.firststory.auth.common.advice
 
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.firststory.auth.common.response.ApiResponse
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -9,12 +10,29 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.bind.support.WebExchangeBindException
 import org.springframework.web.server.ServerWebExchange
+import org.springframework.web.server.ServerWebInputException
 import reactor.core.publisher.Mono
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
 
     private val logger: Logger = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
+
+    @ExceptionHandler(MismatchedInputException::class)
+    fun handleMismatchedInputException(e: MismatchedInputException): Mono<ResponseEntity<ApiResponse<ErrorDetails>>> {
+        val errorDetails = ErrorDetails(
+            error = "Validation Error",
+            message = "Required field '${e.path.last().fieldName}' is missing or malformed in the request."
+        )
+
+        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+            ApiResponse(
+                statusCode = HttpStatus.BAD_REQUEST.value(),
+                message = "Validation failed",
+                data = errorDetails,
+            )
+        ))
+    }
 
     /**
      * 기본 예외 처리 (IllegalArgumentException, NoSuchElementException 등)
@@ -23,11 +41,13 @@ class GlobalExceptionHandler {
         Exception::class,
         NoSuchElementException::class,
         IllegalArgumentException::class,
+        ServerWebInputException::class,
     ])
     fun handleGenericException(e: Exception, exchange: ServerWebExchange): Mono<ResponseEntity<ApiResponse<ErrorDetails>>> {
         val httpStatus = when (e) {
             is NoSuchElementException -> HttpStatus.NOT_FOUND
             is IllegalArgumentException -> HttpStatus.BAD_REQUEST
+            is ServerWebInputException -> HttpStatus.BAD_REQUEST
             else -> HttpStatus.INTERNAL_SERVER_ERROR
         }
 

@@ -1,10 +1,10 @@
 package com.firststory.auth.controller
 
 import com.firststory.auth.dto.ClientRegisterDtoRequest
+import com.firststory.auth.dto.ClientRegisterDtoResponse
 import com.firststory.auth.service.ClientService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClient
 import org.springframework.web.bind.annotation.*
 import reactor.core.publisher.Mono
 
@@ -14,19 +14,17 @@ class ClientController(
     private val clientService: ClientService
 ) {
     @PostMapping("/register")
-    fun registerClient(@RequestBody dto: ClientRegisterDtoRequest): Mono<ResponseEntity<String>> {
-        return clientService.registerNewClient(
-            clientId = dto.clientId,
-            rawClientSecret = dto.clientSecret,
-            clientName = dto.clientName,
-            redirectUri = dto.redirectUri,
-            scopes = dto.scopes,
-            grantTypes = dto.grantTypes
-        ).thenReturn(ResponseEntity.ok("Client registered successfully"))
-            .onErrorResume { e ->
-                Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error registering client: ${e.message}"))
-            }
+    fun register(@RequestBody dto: ClientRegisterDtoRequest): Mono<ClientRegisterDtoResponse> {
+        return clientService.register(dto)
     }
+//
+//    @PutMapping("/{clientId}")
+//    fun update(
+//        @PathVariable clientId: String,
+//        @RequestBody clientUpdateDtoRequest: ClientUpdateDtoRequest
+//    ): Mono<ClientUpdateDtoResponse> {
+//        return clientService.update(clientId, clientUpdateDtoRequest)
+//    }
 
 //    @GetMapping("/client/{clientId}")
 //    fun getClient(@PathVariable clientId: String): Mono<ResponseEntity<RegisteredClient>> {

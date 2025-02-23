@@ -1,5 +1,7 @@
 package com.firststory.auth.service
 
+import com.firststory.auth.dto.ClientRegisterDtoRequest
+import com.firststory.auth.dto.ClientRegisterDtoResponse
 import com.firststory.auth.repository.RedisRegisteredClientRepository
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.oauth2.core.AuthorizationGrantType
@@ -16,39 +18,29 @@ class ClientService(
     private val redisRegisteredClientRepository: RedisRegisteredClientRepository,
     private val passwordEncoder: PasswordEncoder
 ) {
-    fun registerNewClient(
-        clientId: String,
-        rawClientSecret: String,
-        clientName: String,
-        redirectUri: String?,
-        scopes: Set<String>,
-        grantTypes: Set<String>
-    ): Mono<Void> {
-
-        val encodedSecret = passwordEncoder.encode(rawClientSecret)
-
+    fun register(dto: ClientRegisterDtoRequest): Mono<ClientRegisterDtoResponse> {
+        val encodedSecret = passwordEncoder.encode(dto.clientSecret)
         val client = RegisteredClient.withId(UUID.randomUUID().toString())
-            .clientId(clientId)
+            .clientId(dto.clientId)
             .clientSecret("{bcrypt}$encodedSecret")
-            .clientName(clientName)
-            .redirectUri(redirectUri)
+            .clientName(dto.clientName)
             .apply {
-                scopes.forEach { scope(it) }
-                grantTypes.forEach {
-                    authorizationGrantType(AuthorizationGrantType(it))
-                }
+                dto.redirectUris.forEach { redirectUri(it) }
+                dto.scopes.forEach { scope(it) }
+                dto.authorizationGrantTypes.forEach { authorizationGrantType(AuthorizationGrantType(it)) }
+                dto.clientAuthenticationMethods.forEach { clientAuthenticationMethod(ClientAuthenticationMethod(it)) }
             }
-            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
             .tokenSettings(
                 TokenSettings.builder()
-                    .accessTokenTimeToLive(Duration.ofMinutes(30)) // 여기서 Duration을 사용하고 있음
-                    .refreshTokenTimeToLive(Duration.ofDays(7))  // Duration 타입
+                    .accessTokenTimeToLive(Duration.ofMinutes(dto.accessTokenValiditySeconds.toLong())) // 여기서 Duration을 사용하고 있음
+                    .refreshTokenTimeToLive(Duration.ofDays(dto.refreshTokenValiditySeconds.toLong()))  // Duration 타입
                     .build()
             )
             .build()
 
         // redisRegisteredClientRepository.save(client)가 Mono<Void>를 반환하도록 수정
         return redisRegisteredClientRepository.save(client)
+            .then(ClientRegisterDtoResponse.fromEntity(client))
     }
 
 //    private fun convertGrandType(grantType: String): AuthorizationGrantType {
