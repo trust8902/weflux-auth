@@ -6,6 +6,7 @@ import com.firststory.auth.service.MemberService
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.redis.core.ReactiveRedisTemplate
+import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.ReactiveAuthenticationManager
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity
@@ -30,6 +31,10 @@ class SecurityConfig(
     fun securityWebFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
         return http.authorizeExchange {
             it.pathMatchers("/signup", "/login", "/oauth2/**").permitAll()
+                .pathMatchers("/public/**").permitAll()
+                .pathMatchers("/admin/**").hasRole("ADMIN")
+                .pathMatchers(HttpMethod.POST, "/articles").hasRole("EDITOR")
+                .pathMatchers("/api/**").hasAuthority("API_ACCESS")
                 .anyExchange().authenticated()
         }
             .csrf { it.disable() }

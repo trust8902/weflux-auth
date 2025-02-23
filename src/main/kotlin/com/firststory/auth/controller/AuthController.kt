@@ -19,9 +19,8 @@ class AuthController(
     private val authService: AuthService
 ) {
     @PostMapping("/signUp")
-    fun signUp(@RequestBody @Valid dto: RegisterDtoRequest): Mono<ResponseEntity<ApiResponse<String>>> {
+    fun signUp(@RequestBody @Valid dto: SignUpDtoRequest): Mono<SignUpDtoResponse> {
         return authService.signUp(dto.username, dto.password, dto.name)
-            .map { ResponseEntity.ok(ApiResponse(200, "User created", null)) }
     }
 
     @PostMapping("/login")

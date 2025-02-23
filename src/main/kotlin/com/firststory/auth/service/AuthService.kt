@@ -1,6 +1,7 @@
 package com.firststory.auth.service
 
 import com.firststory.auth.domain.Member
+import com.firststory.auth.dto.SignUpDtoResponse
 import org.springframework.security.authentication.ReactiveAuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.userdetails.UserDetails
@@ -13,7 +14,7 @@ class AuthService(
     private val tokenService: TokenService,
     private val authenticationManager: ReactiveAuthenticationManager,
 ) {
-    fun signUp(username: String, password: String, name: String): Mono<Member> {
+    fun signUp(username: String, password: String, name: String): Mono<SignUpDtoResponse> {
         return memberService.signUp(
             username,
             password,

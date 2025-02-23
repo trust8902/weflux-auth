@@ -10,4 +10,6 @@ interface MemberRepository: ReactiveCrudRepository<Member, Long> {
 
     fun findByUsername(username: String) : Mono<Member>
 
+    fun existsByUsername(username: String): Boolean
+
 }

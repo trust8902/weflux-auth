@@ -1,6 +1,7 @@
 package com.firststory.auth.service
 
 import com.firststory.auth.domain.Member
+import com.firststory.auth.dto.SignUpDtoResponse
 import com.firststory.auth.repository.MemberRepository
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService
 import org.springframework.security.core.userdetails.User
@@ -28,13 +29,22 @@ class MemberService(
             .switchIfEmpty(Mono.error(UsernameNotFoundException("User not found")))
     }
 
-    fun signUp(username: String, password: String, name: String, authToken: String): Mono<Member> {
-        return memberRepository.save(Member(
+    fun signUp(username: String, password: String, name: String, authToken: String): Mono<SignUpDtoResponse> {
+        val memberExists = memberRepository.existsByUsername(username)
+
+//        if (memberExists) {
+//            Mono.error(UsernameNotFoundException("User not found"))
+//        }
+
+        val member = Member(
             username = username,
             password = passwordEncoder.encode(password),
             name = name,
             authToken = authToken
-        ))
+        )
+
+        return memberRepository.save(member)
+            .then(SignUpDtoResponse.fromEntity(member))
     }
 
     fun updateAuthToken(memberId: Long, authToken: String): Mono<Member> {
